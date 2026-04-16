@@ -33,14 +33,14 @@ begin
       Period_ticks => 100);
 
    SAPL.Scheduler.Add_Task
-      (Callback     => SAPL.Watchdog.On_Update.Create_Callback,
+      (Callback     => SAPL.Heartbeat.On_Update.Create_Callback,
       Delay_ticks  => 0,
       Period_ticks => 1000);
 
    SAPL.Scheduler.Add_Task
-      (Callback     => SAPL.Heartbeat.On_Update.Create_Callback,
+      (Callback     => SAPL.Watchdog.On_Update.Create_Callback,
       Delay_ticks  => 1,
-      Period_ticks => 2000);
+      Period_ticks => 1000);
 
    COM.Debug.Put_Tx_String (Message);
 
