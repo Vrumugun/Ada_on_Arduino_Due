@@ -1,11 +1,11 @@
-# Ada UART Echo for Arduino Due #2
+# Time triggered system example with Ada on Arduino Due Hardware
+
+Based on examples in the book "The Engineering of Reliable Embedded Systems" by Michael J. Pont.
 
 ## What it does:
 
-- Enables PMC clocks for UART and PIOA.
-- Configures PA8/PA9 to peripheral A for UART RX/TX.
-- Configures UART0 as 9600 8N1 (no parity).
-- Receives a character over UART and sends it back.
+- Implements scheduler for time triggered system.
+- Add tasks for watchdog, heartbeat, debug communication, ...
 
 ## Build:
 
@@ -18,4 +18,4 @@
 ## Test
 
 Open a serial terminal on COM3 at 9600 baud, 8N1.
-You should see the message printed repeatedly.
+You should see the heartbeat message printed repeatedly.
