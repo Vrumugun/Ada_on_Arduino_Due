@@ -63,6 +63,8 @@ begin
         (Use_Processor_Clock => True,
          Clock_Frequency     => 84_000_000);
 
+   --  The watchdog is enabled by default on the SAM3X8E.
+   --  If not reset or disabled, it will reset the board after ~16 seconds.
    --  Configure watchdog or call WDT.Disable instead
    WDT.Configure (16#FFF#);
 
