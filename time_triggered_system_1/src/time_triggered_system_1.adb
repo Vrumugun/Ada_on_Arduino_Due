@@ -2,6 +2,7 @@ with SAPL.Processor;
 with SAPL.Scheduler;
 with SAPL.Watchdog;
 with SAPL.Heartbeat;
+with SAPL.State_Machine;
 with COM.Debug;
 
 procedure Time_Triggered_System_1 is
@@ -11,8 +12,19 @@ begin
    SAPL.Processor.Initialize;
    SAPL.Watchdog.Initialize;
    SAPL.Heartbeat.Initialize;
+   SAPL.State_Machine.Initialize;
    COM.Debug.Initialize;
    SAPL.Scheduler.Initialize;
+
+   SAPL.Scheduler.Add_Task
+      (Callback     => COM.Debug.On_Update.Create_Callback,
+      Delay_ticks  => 0,
+      Period_ticks => 2);
+
+   SAPL.Scheduler.Add_Task
+      (Callback     => SAPL.State_Machine.On_Update.Create_Callback,
+      Delay_ticks  => 0,
+      Period_ticks => 10);
 
    SAPL.Scheduler.Add_Task
       (Callback     => SAPL.Watchdog.On_Update.Create_Callback,
@@ -21,13 +33,8 @@ begin
 
    SAPL.Scheduler.Add_Task
       (Callback     => SAPL.Heartbeat.On_Update.Create_Callback,
-      Delay_ticks  => 0,
+      Delay_ticks  => 1,
       Period_ticks => 1000);
-
-   SAPL.Scheduler.Add_Task
-      (Callback     => COM.Debug.On_Update.Create_Callback,
-      Delay_ticks  => 0,
-      Period_ticks => 2);
 
    COM.Debug.Put_Tx_String (Message);
 
