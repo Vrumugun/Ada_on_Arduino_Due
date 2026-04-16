@@ -1,0 +1,18 @@
+name = "led_timer"
+description = ""
+version = "0.1.0-dev"
+
+authors = ["Simon Kraemer"]
+maintainers = ["Simon Kraemer <wisniewski1@gmail.com>"]
+maintainers-logins = ["Vrumugun"]
+licenses = "MIT OR Apache-2.0 WITH LLVM-exception"
+website = ""
+tags = []
+
+executables = ["led_timer"]
+
+[[depends-on]]
+light_arduino_due = "~0.3.0"
+a0b_atsam3x8e_gpio = "*"
+a0b_armv7m_systick_clock_timer = "*"
+a0b_timer = "*"
