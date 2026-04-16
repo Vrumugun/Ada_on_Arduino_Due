@@ -63,7 +63,7 @@ begin
         (Use_Processor_Clock => True,
          Clock_Frequency     => 84_000_000);
 
-   --  WDT.Disable;
+   --  Configure watchdog or call WDT.Disable instead
    WDT.Configure (16#FFF#);
 
    LED.Configure_Output;
