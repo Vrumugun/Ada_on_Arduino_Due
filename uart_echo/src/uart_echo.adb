@@ -98,7 +98,7 @@ begin
          end;
       end if;
 
-      --  Toggle LED every ~5 million iterations to show
+      --  Toggle LED every ~1 million iterations to show
       --  that the program is alive and not stuck in the UART routines.
       Busy_Delay := Busy_Delay + 1;
       if Busy_Delay > 1_000_000 then
