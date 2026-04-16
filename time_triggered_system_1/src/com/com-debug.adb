@@ -9,13 +9,15 @@ package body COM.Debug is
 
    use type A0B.Types.SVD.UInt32;
 
+   --  Buffer_Size : constant Natural := 1024;
+
+   Rx_Buffer : Circular_Buffer_Character;
+   Tx_Buffer : Circular_Buffer_Character;
+
    UART_TX_PIN_MASK : constant A0B.Types.SVD.UInt32 := 2 ** 9;
    UART_RX_PIN_MASK : constant A0B.Types.SVD.UInt32 := 2 ** 8;
    UART_PINS_MASK   : constant A0B.Types.SVD.UInt32 :=
       UART_TX_PIN_MASK or UART_RX_PIN_MASK;
-
-   Message : constant String := "Hello from COM.Debug!" &
-      Character'Val (13) & Character'Val (10);
 
    procedure Initialize is
    begin
@@ -27,9 +29,6 @@ package body COM.Debug is
 
       Configure_UART_Pins;
       Uart.Configure (9_600);
-      for C of Message loop
-         Uart.Write_Char (C);
-      end loop;
    end Initialize;
 
    procedure Configure_UART_Pins is
@@ -55,7 +54,107 @@ package body COM.Debug is
 
    procedure Update is
    begin
-      null;
+      Receive_Character;
+      Transmit_Character;
    end Update;
+
+   procedure Receive_Character is
+      Received_Char : Character;
+   begin
+      if Uart.Is_Receive_Ready then
+         Uart.Read_Char (Received_Char);
+         if not Rx_Buffer.Is_Buffer_Full then
+            Rx_Buffer.Put_Character (Received_Char);
+         end if;
+      end if;
+   end Receive_Character;
+
+   procedure Transmit_Character is
+      Next_Char : Character;
+   begin
+      if Uart.Is_Transmit_Ready and then not Tx_Buffer.Is_Buffer_Empty then
+         Next_Char := Tx_Buffer.Get_Character;
+         Uart.Write_Char (Next_Char);
+      end if;
+   end Transmit_Character;
+
+   procedure Put_Tx_Character (C : Character) is
+   begin
+      if not Tx_Buffer.Is_Buffer_Full then
+         Tx_Buffer.Put_Character (C);
+      end if;
+   end Put_Tx_Character;
+
+   procedure Put_Tx_String (S : String) is
+   begin
+      for C of S loop
+         Put_Tx_Character (C);
+      end loop;
+   end Put_Tx_String;
+
+   function Is_Rx_Character_Available return Boolean is
+   begin
+      return not Rx_Buffer.Is_Buffer_Empty;
+   end Is_Rx_Character_Available;
+
+   function Get_Next_Rx_Character return Character is
+      Next_Character : Character;
+   begin
+      if Is_Rx_Character_Available then
+         Next_Character := Rx_Buffer.Get_Character;
+         return Next_Character;
+      else
+         raise Constraint_Error;
+      end if;
+   end Get_Next_Rx_Character;
+
+   procedure Put_Character (Self : in out Circular_Buffer_Character;
+      C : Character) is
+   begin
+      Self.Data (Self.Head) := C;
+      Self.Head := Self.Head + 1;
+      if Self.Head = Buffer_Size then
+         Self.Head := 0;
+      end if;
+   end Put_Character;
+
+   function Get_Character (Self : in out Circular_Buffer_Character)
+      return Character is
+      Next_Character : Character;
+   begin
+      if not Is_Buffer_Empty (Self) then
+         Self.Tail := Self.Tail + 1;
+         if Self.Tail = Buffer_Size then
+            Self.Tail := Self.Tail - Buffer_Size;
+         end if;
+
+         Next_Character := Self.Data (Self.Tail);
+         return Next_Character;
+      else
+         raise Constraint_Error;
+      end if;
+   end Get_Character;
+
+   function Is_Buffer_Empty (Self : in out Circular_Buffer_Character)
+      return Boolean is
+      Temp : Natural;
+   begin
+      Temp := Self.Tail + 1;
+      if Temp = Buffer_Size then
+         Temp := Temp - Buffer_Size;
+      end if;
+      return Temp = Self.Head;
+   end Is_Buffer_Empty;
+
+   function Is_Buffer_Full (Self : in out Circular_Buffer_Character)
+      return Boolean is
+      Temp : Natural;
+   begin
+      Temp := Self.Head + 1;
+      if Temp = Buffer_Size then
+         Temp := Temp - Buffer_Size;
+      end if;
+      return Temp = Self.Tail;
+   end Is_Buffer_Full;
 
 end COM.Debug;
