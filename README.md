@@ -1,7 +1,7 @@
-# Ada_on_Arduino_Due
+# Ada_on_Arduino_Due:
 Some examples running Ada on Arduino Due HW
 
-### Other code used in these examples
+### Other code used in these examples:
 
 https://github.com/godunko/a0b-atsam3x8e
 https://github.com/godunko/a0b-examples
@@ -11,7 +11,7 @@ https://github.com/BrentSeidel/Ada-Arduino-Due
 https://github.com/BrentSeidel/BBS-BBB-Ada/
 https://github.com/BrentSeidel/BBS-Ada
 
-## Alire
+## Alire:
 
 Add Alire to path in Powershell: 
 
@@ -21,13 +21,13 @@ alr init --bin hello_pico
 
 alr init --bin uart_example2
 
-### convert elf to binary
+### Convert elf to binary:
 
 alr exec -- arm-eabi-objcopy -O binary .\bin\hello_arduino .\bin\hello_arduino.bin
 
 alr exec -- arm-eabi-objcopy -O binary .\bin\led_timer_main .\bin\led_timer.bin
 
-### bossac
+### Bossac:
 
 Press "Erase" and "Reset" next on the board.
 
