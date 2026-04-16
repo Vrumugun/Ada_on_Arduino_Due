@@ -58,9 +58,10 @@ package body SAPL.Scheduler is
    begin
       Tick_Count := Tick_Count + 1;
       if Tick_Count > Max_Ticks then
-         SAPL.Processor.Fail_Safe;
+         SAPL.Processor.Fail_Safe (SAPL.Tick_Overflow);
+      else
+         A0B.Timer.Enqueue (Timer, On_Tick_Callbacks.Create_Callback, 0.001);
       end if;
-      A0B.Timer.Enqueue (Timer, On_Tick_Callbacks.Create_Callback, 0.001);
    end On_Tick;
 
    procedure Add_Task (Callback : A0B.Callbacks.Callback;
