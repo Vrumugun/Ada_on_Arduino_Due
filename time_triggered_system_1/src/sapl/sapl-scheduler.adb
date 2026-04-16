@@ -1,21 +1,29 @@
 with SAPL.Processor;
+with HAL.SysTick_Clock_Timer;
 
 package body SAPL.Scheduler is
 
-   tick_rate_s : Duration := 1.0;
+   tick_rate_hz : A0B.Types.Unsigned_32 := 1000;
    Task_List : array (Natural range 1 .. 10) of Scheduler_Task;
    Task_Count : Natural := 0;
    Tick_Count : Natural := 0;
+   Total_Tick_Count : Natural := 0;
    Max_Ticks : constant Natural := 1;
 
-   procedure Initialize (tick_rate_s : Duration := 0.001) is
+   procedure Initialize (tick_rate_hz : A0B.Types.Unsigned_32 := 1000) is
    begin
-      Scheduler.tick_rate_s := tick_rate_s;
+      Scheduler.tick_rate_hz := tick_rate_hz;
+
+      HAL.SysTick_Clock_Timer.Set_Tick_Callback
+         (On_Tick_Callbacks.Create_Callback);
    end Initialize;
 
    procedure Start is
    begin
-      A0B.Timer.Enqueue (Timer, On_Tick_Callbacks.Create_Callback, 0.001);
+      HAL.SysTick_Clock_Timer.Initialize
+         (Use_Processor_Clock => True,
+         Clock_Frequency     => 84_000_000,
+         Tick_Frequency => tick_rate_hz);
    end Start;
 
    procedure Dispatch_Tasks is
@@ -42,8 +50,9 @@ package body SAPL.Scheduler is
          end loop;
 
          SAPL.Processor.Disable_Interrupts;
+         Tick_Count := Tick_Count - 1;
          if Tick_Count > 0 then
-            Tick_Count := Tick_Count - 1;
+            Update_Required := True;
          else
             Update_Required := False;
          end if;
@@ -57,10 +66,10 @@ package body SAPL.Scheduler is
    procedure On_Tick is
    begin
       Tick_Count := Tick_Count + 1;
+      Total_Tick_Count := Total_Tick_Count + 1;
+
       if Tick_Count > Max_Ticks then
          SAPL.Processor.Fail_Safe (SAPL.Tick_Overflow);
-      else
-         A0B.Timer.Enqueue (Timer, On_Tick_Callbacks.Create_Callback, 0.001);
       end if;
    end On_Tick;
 
@@ -76,5 +85,10 @@ package body SAPL.Scheduler is
       Task_List (Task_Count + 1) := new_task;
       Task_Count := Task_Count + 1;
    end Add_Task;
+
+   function Get_Total_Tick_Count return Natural is
+   begin
+      return Total_Tick_Count;
+   end Get_Total_Tick_Count;
 
 end SAPL.Scheduler;

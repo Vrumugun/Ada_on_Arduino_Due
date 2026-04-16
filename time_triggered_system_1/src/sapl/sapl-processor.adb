@@ -1,7 +1,6 @@
 with A0B.ATSAM3X8E.PIO;
 with A0B.ATSAM3X8E.PIO.PIOA;
 with A0B.ARMv7M;
-with A0B.ARMv7M.SysTick_Clock_Timer;
 with A0B.ARMv7M.Instructions;
 with COM.Debug;
 
@@ -11,9 +10,6 @@ package body SAPL.Processor is
 
    procedure Initialize is
    begin
-      A0B.ARMv7M.SysTick_Clock_Timer.Initialize
-        (Use_Processor_Clock => True,
-         Clock_Frequency     => 84_000_000);
       LED_TX.Configure_Output;
       LED_TX.Set (True);
    end Initialize;
@@ -22,7 +18,8 @@ package body SAPL.Processor is
    begin
       Disable_Interrupts;
       LED_TX.Set (False);
-      COM.Debug.Put_Tx_String ("Fail Safe!" & Error_Code'Image & Character'Val (13) & Character'Val (10));
+      COM.Debug.Put_Tx_String ("Fail Safe!" & Error_Code'Image &
+         Character'Val (13) & Character'Val (10));
       loop
          --  for debugging purposes, print the fail safe message.
          COM.Debug.Update;

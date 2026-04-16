@@ -14,5 +14,4 @@ executables = ["time_triggered_system_1"]
 [[depends-on]]
 light_arduino_due = "~0.3.0"
 a0b_atsam3x8e_gpio = "*"
-a0b_armv7m_systick_clock_timer = "*"
-a0b_timer = "*"
+a0b_time = "*"
