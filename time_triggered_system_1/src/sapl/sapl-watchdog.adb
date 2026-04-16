@@ -1,6 +1,6 @@
 with A0B.ATSAM3X8E.WDT;
 
-package body Watchdog is
+package body SAPL.Watchdog is
    WDT : A0B.ATSAM3X8E.WDT.WDT_Controller renames A0B.ATSAM3X8E.WDT.WDT;
 
    procedure Initialize (timeout_ms : Duration := 1000.0) is
@@ -17,4 +17,4 @@ package body Watchdog is
       WDT.Reload;
    end Update;
 
-end Watchdog;
+end SAPL.Watchdog;

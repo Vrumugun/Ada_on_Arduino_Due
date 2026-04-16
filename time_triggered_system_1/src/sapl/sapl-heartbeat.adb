@@ -2,7 +2,7 @@ with A0B.ATSAM3X8E.PIO;
 with A0B.ATSAM3X8E.PIO.PIOB;
 with COM.Debug;
 
-package body Heartbeat is
+package body SAPL.Heartbeat is
    LED   : A0B.ATSAM3X8E.PIO.ATSAM3X8E_Pin
         renames A0B.ATSAM3X8E.PIO.PIOB.PB27;
    LED_State : Boolean := False;
@@ -24,4 +24,4 @@ package body Heartbeat is
       end if;
    end Update;
 
-end Heartbeat;
+end SAPL.Heartbeat;

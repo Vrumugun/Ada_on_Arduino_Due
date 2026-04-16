@@ -1,6 +1,6 @@
-with Processor;
+with SAPL.Processor;
 
-package body Scheduler is
+package body SAPL.Scheduler is
 
    tick_rate_s : Duration := 1.0;
    Task_List : array (Natural range 1 .. 10) of Scheduler_Task;
@@ -21,11 +21,11 @@ package body Scheduler is
    procedure Dispatch_Tasks is
       Update_Required : Boolean := False;
    begin
-      Processor.Disable_Interrupts;
+      SAPL.Processor.Disable_Interrupts;
       if Tick_Count > 0 then
          Update_Required := True;
       end if;
-      Processor.Enable_Interrupts;
+      SAPL.Processor.Enable_Interrupts;
 
       while Update_Required loop
          for I in 1 .. Task_Count loop
@@ -41,24 +41,24 @@ package body Scheduler is
             end if;
          end loop;
 
-         Processor.Disable_Interrupts;
+         SAPL.Processor.Disable_Interrupts;
          if Tick_Count > 0 then
             Tick_Count := Tick_Count - 1;
          else
             Update_Required := False;
          end if;
-         Processor.Enable_Interrupts;
+         SAPL.Processor.Enable_Interrupts;
       end loop;
 
       --  Switch CPU into lower power mode.
-      Processor.Wait_For_Interrupt;
+      SAPL.Processor.Wait_For_Interrupt;
    end Dispatch_Tasks;
 
    procedure On_Tick is
    begin
       Tick_Count := Tick_Count + 1;
       if Tick_Count > Max_Ticks then
-         Processor.Fail_Safe;
+         SAPL.Processor.Fail_Safe;
       end if;
       A0B.Timer.Enqueue (Timer, On_Tick_Callbacks.Create_Callback, 0.001);
    end On_Tick;
@@ -76,4 +76,4 @@ package body Scheduler is
       Task_Count := Task_Count + 1;
    end Add_Task;
 
-end Scheduler;
+end SAPL.Scheduler;

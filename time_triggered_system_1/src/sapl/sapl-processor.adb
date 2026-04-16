@@ -4,7 +4,7 @@ with A0B.ARMv7M;
 with A0B.ARMv7M.SysTick_Clock_Timer;
 with A0B.ARMv7M.Instructions;
 
-package body Processor is
+package body SAPL.Processor is
    LED_TX   : A0B.ATSAM3X8E.PIO.ATSAM3X8E_Pin
      renames A0B.ATSAM3X8E.PIO.PIOA.PA21;
 
@@ -40,4 +40,4 @@ package body Processor is
       A0B.ARMv7M.Instructions.Wait_For_Interrupt;
    end Wait_For_Interrupt;
 
-end Processor;
+end SAPL.Processor;

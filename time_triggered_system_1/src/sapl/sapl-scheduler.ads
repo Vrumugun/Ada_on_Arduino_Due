@@ -1,7 +1,7 @@
 with A0B.Timer;
 with A0B.Callbacks.Generic_Parameterless;
 
-package Scheduler is
+package SAPL.Scheduler is
    procedure Initialize (tick_rate_s : Duration := 0.001);
    procedure Start;
    procedure Dispatch_Tasks;
@@ -24,4 +24,4 @@ package Scheduler is
    procedure Add_Task (Callback : A0B.Callbacks.Callback;
       Delay_ticks : Integer; Period_ticks : Integer);
 
-end Scheduler;
+end SAPL.Scheduler;
