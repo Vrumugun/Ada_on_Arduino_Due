@@ -1,4 +1,4 @@
-# Ada UART Example for Arduino Due #2
+# Ada LED blink example using timer
 
 Hello from Ada UART on Arduino Due!
 
@@ -14,6 +14,8 @@ Hello from Ada UART on Arduino Due!
 - Press ERASE on the board.
 - Press RESET on the board.
 - ..\bossac\1.6.1-arduino\bossac -p COM3 -U false -e -w -v -b bin\led_timer_main.bin -R
+
+(change COM3 to whatever COM port your board is connected to)
 
 ## Test
 
