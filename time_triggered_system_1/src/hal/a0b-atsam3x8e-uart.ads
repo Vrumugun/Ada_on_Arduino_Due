@@ -43,7 +43,7 @@ is
      UART_Controller_Base
      (Peripheral   => A0B.ATSAM3X8E.SVD.UART.UART_Periph'Access,
       Identifier   =>
-        Universal_Synchronous_Asynchronous_Receiver_Transmitter_1);
+        Universal_Asynchronous_Receiver_Transceiver);
 
    UART1 : aliased UART_Controller;
 
