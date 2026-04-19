@@ -2,35 +2,23 @@ with SAPL.Processor;
 with SAPL.Scheduler;
 with SAPL.Watchdog;
 with SAPL.Heartbeat;
-with SAPL.State_Machine;
-with SAPL.Shell;
+with SAPL.Version;
 with COM.Debug;
 
 procedure Time_Triggered_System_1 is
-   Message : constant String := "Time triggered system 1!" &
-      Character'Val (13) & Character'Val (10);
+   Message : constant String := "Time triggered system 1 - Version: " &
+       SAPL.Version.Firmware_Version & Character'Val (13) & Character'Val (10);
 begin
    SAPL.Processor.Initialize;
-   SAPL.Watchdog.Initialize;
-   SAPL.Heartbeat.Initialize;
-   SAPL.State_Machine.Initialize;
    COM.Debug.Initialize;
+   SAPL.Watchdog.Initialize (1100.0);
+   SAPL.Heartbeat.Initialize;
    SAPL.Scheduler.Initialize (1000);
 
    SAPL.Scheduler.Add_Task
       (Callback     => COM.Debug.On_Update.Create_Callback,
       Delay_ticks  => 0,
       Period_ticks => 2);
-
-   SAPL.Scheduler.Add_Task
-      (Callback     => SAPL.State_Machine.On_Update.Create_Callback,
-      Delay_ticks  => 0,
-      Period_ticks => 10);
-
-   SAPL.Scheduler.Add_Task
-      (Callback     => SAPL.Shell.On_Update.Create_Callback,
-      Delay_ticks  => 0,
-      Period_ticks => 100);
 
    SAPL.Scheduler.Add_Task
       (Callback     => SAPL.Heartbeat.On_Update.Create_Callback,

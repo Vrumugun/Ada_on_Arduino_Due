@@ -7,7 +7,8 @@ package SAPL is
          None,
          Watchdog_Expired,
          Tick_Overflow,
-         Data_Corruption
+         Data_Corruption,
+         Unhandled_Exception
       );
 
    function Verify_Duplicate_Variable
