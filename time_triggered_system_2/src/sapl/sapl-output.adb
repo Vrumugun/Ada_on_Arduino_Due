@@ -1,9 +1,15 @@
+with A0B.ATSAM3X8E.PIO;
+with A0B.ATSAM3X8E.PIO.PIOA;
+
 package body SAPL.Output is
+   Output_Pin : A0B.ATSAM3X8E.PIO.ATSAM3X8E_Pin
+     renames A0B.ATSAM3X8E.PIO.PIOA.PA28;
+
+   Output_State : Boolean := False;
 
    procedure Initialize is
    begin
-      --  Code to initialize output pin
-      null;
+      Output_Pin.Configure_Output;
    end Initialize;
 
    procedure Update is
@@ -14,19 +20,21 @@ package body SAPL.Output is
 
    procedure Set_Output_State (State : Boolean) is
    begin
-      null;
+      Output_State := State;
    end Set_Output_State;
 
    function Get_Output_State return Boolean is
    begin
-      --  Code to read and return current state of output pin
-      return False; -- Placeholder return value
+      return Output_State;
    end Get_Output_State;
 
    procedure Control_Output is
    begin
-      --  Code to control output pin based on state machine logic
-      null;
+      if Output_State then
+         Output_Pin.Set (True);
+      else
+         Output_Pin.Set (False); 
+      end if;
    end Control_Output;
 
    procedure Verify_Output_State is
