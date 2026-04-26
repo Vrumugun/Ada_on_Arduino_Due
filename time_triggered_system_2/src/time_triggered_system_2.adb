@@ -47,7 +47,7 @@ begin
       Delay_ticks  => 2,
       Period_ticks => 4);
 
-SAPL.Scheduler.Add_Task
+   SAPL.Scheduler.Add_Task
       (Callback     => SAPL.Input_Diag.On_Update.Create_Callback,
       Delay_ticks  => 0,
       Period_ticks => 10);
