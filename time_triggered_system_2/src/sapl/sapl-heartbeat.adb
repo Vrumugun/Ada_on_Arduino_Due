@@ -15,7 +15,7 @@ package body SAPL.Heartbeat is
    Rx_Test_Message : String (1 .. 14);
    Tx_Index : Integer := Tx_Test_Message'First;
    Rx_Index : Integer := Rx_Test_Message'First;
-   Send_Test_Message : Boolean := False;
+   Send_Test_Message : constant Boolean := False;
 
    use type A0B.Types.SVD.UInt32;
 

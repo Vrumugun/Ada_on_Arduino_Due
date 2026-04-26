@@ -48,7 +48,7 @@ begin
    SAPL.Scheduler.Add_Task
       (Callback     => COM.Cross.On_Update_Tx.Create_Callback,
       Delay_ticks  => 1,
-      Period_ticks => 100);
+      Period_ticks => 200);
 
    SAPL.Scheduler.Add_Task
       (Callback     => SAPL.State_Machine.On_Update.Create_Callback,
