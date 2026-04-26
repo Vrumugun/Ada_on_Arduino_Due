@@ -1,6 +1,6 @@
 with COM.Cross;
 with SAPL.Processor;
-with SAPL.Input;
+with SAPL.Input_Diag;
 with SAPL.Output;
 with COM.Debug;
 with A0B.Types.SVD;
@@ -63,7 +63,7 @@ package body SAPL.State_Machine is
             Check_Cross_Comm_Timeout;
             Cross_Compare_Inputs;
             Cross_Compare_Outputs;
-            if Peer_Input_State and then SAPL.Input.Get_Input_State then
+            if Peer_Input_State and then SAPL.Input_Diag.Get_Input_State then
                Set_State (State_Output_On);
             end if;
          when State_Output_On =>
@@ -71,7 +71,7 @@ package body SAPL.State_Machine is
             Check_Cross_Comm_Timeout;
             Cross_Compare_Inputs;
             Cross_Compare_Outputs;
-            if not Peer_Input_State or else not SAPL.Input.Get_Input_State then
+            if not Peer_Input_State or else not SAPL.Input_Diag.Get_Input_State then
                Set_State (State_Output_Off);
             end if;
          when State_Error =>
@@ -155,7 +155,7 @@ package body SAPL.State_Machine is
              then A0B.Types.SVD.UInt32 (2) else A0B.Types.SVD.UInt32 (0))
          or (if SAPL.Processor.Get_Cpu_Id = SAPL.Processor.Cpu_Top
              then A0B.Types.SVD.UInt32 (4) else A0B.Types.SVD.UInt32 (8))
-         or (if SAPL.Input.Get_Input_State
+         or (if SAPL.Input_Diag.Get_Input_State
              then A0B.Types.SVD.UInt32 (16) else A0B.Types.SVD.UInt32 (0))
          or (if Output_Control
              then A0B.Types.SVD.UInt32 (32) else A0B.Types.SVD.UInt32 (0));
@@ -245,13 +245,13 @@ package body SAPL.State_Machine is
 
    procedure Cross_Compare_Inputs is
    begin
-      if Peer_Input_State /= SAPL.Input.Get_Input_State then
+      if Peer_Input_State /= SAPL.Input_Diag.Get_Input_State then
          Input_Cross_Compare_Timer := Input_Cross_Compare_Timer + 1;
          if Input_Cross_Compare_Timer >= Input_Cross_Compare_Timeout then
             --  Handle input mismatch timeout here
             COM.Debug.Put_Tx_String ("Input mismatch detected! Peer: " &
                Peer_Input_State'Image & " Local: " &
-               SAPL.Input.Get_Input_State'Image & Character'Val (13) &
+               SAPL.Input_Diag.Get_Input_State'Image & Character'Val (13) &
                Character'Val (10));
             Set_State (State_Error);
          end if;

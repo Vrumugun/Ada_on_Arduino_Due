@@ -10,6 +10,7 @@ package body SAPL.Output is
    procedure Initialize is
    begin
       Output_Pin.Configure_Output;
+      Output_Pin.Set (False);
    end Initialize;
 
    procedure Update is

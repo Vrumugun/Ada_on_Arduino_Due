@@ -12,7 +12,8 @@ package SAPL is
          Output_Error,
          Unknown_Cpu,
          Cross_Comm_Error,
-         Unhandled_Exception
+         Unhandled_Exception,
+         Input_Error
       );
 
    function Verify_Duplicate_Variable

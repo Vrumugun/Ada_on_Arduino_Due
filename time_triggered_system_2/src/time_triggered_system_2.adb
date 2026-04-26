@@ -5,6 +5,7 @@ with SAPL.Heartbeat;
 with SAPL.State_Machine;
 with SAPL.Shell;
 with SAPL.Input;
+with SAPL.Input_Diag;
 with SAPL.Version;
 with COM.Debug;
 with COM.Cross;
@@ -20,6 +21,7 @@ begin
    SAPL.Watchdog.Initialize (1100.0);
    SAPL.Heartbeat.Initialize;
    SAPL.Input.Initialize;
+   SAPL.Input_Diag.Initialize;
    SAPL.State_Machine.Initialize;
    SAPL.Shell.Initialize;
    SAPL.Output.Initialize;
@@ -44,6 +46,11 @@ begin
       (Callback     => SAPL.Output.On_Update.Create_Callback,
       Delay_ticks  => 2,
       Period_ticks => 4);
+
+SAPL.Scheduler.Add_Task
+      (Callback     => SAPL.Input_Diag.On_Update.Create_Callback,
+      Delay_ticks  => 0,
+      Period_ticks => 10);
 
    SAPL.Scheduler.Add_Task
       (Callback     => COM.Cross.On_Update_Tx.Create_Callback,
