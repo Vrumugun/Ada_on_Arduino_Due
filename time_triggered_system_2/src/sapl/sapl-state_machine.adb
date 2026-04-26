@@ -10,19 +10,16 @@ package body SAPL.State_Machine is
    use type A0B.Types.SVD.UInt32;
    use type SAPL.Processor.Cpu_Id;
 
-   Rx_Count : Natural := 0;
    Rx_Cross_Comm_Timer : Natural := 0;
-   Rx_Cross_Comm_Timeout : constant Natural := 100;
+   Rx_Cross_Comm_Timeout : constant Natural := 5;
 
    Input_Cross_Compare_Timer : Natural := 0;
-   Input_Cross_Compare_Timeout : constant Natural := 100;
+   Input_Cross_Compare_Timeout : constant Natural := 10;
 
    Output_Cross_Compare_Timer : Natural := 0;
-   Output_Cross_Compare_Timeout : constant Natural := 100;
+   Output_Cross_Compare_Timeout : constant Natural := 10;
 
-   Cross_Comm_Message_Length : constant Natural := 5;
-
-   Start_Header : constant Character := Character'Val (16#A5#);
+   Cross_Comm_Message_Length : constant Natural := 1;
 
    Peer_Cpu_Id : SAPL.Processor.Cpu_Id := SAPL.Processor.Cpu_Unknown;
    Peer_Input_State : Boolean := False;
@@ -32,12 +29,13 @@ package body SAPL.State_Machine is
 
    Rx_Message_Count : Natural := 0;
    Tx_Message_Count : Natural := 0;
+   Tx_Toggle_Bit     : Boolean := False;
 
    Last_Rx_Message : String (1 .. Cross_Comm_Message_Length);
 
    State : State_Type := State_Wait_For_Peer;
 
-   Print_Messages: Boolean := False;
+   Print_Messages: constant Boolean := False;
 
    procedure Initialize is
    begin
@@ -139,32 +137,37 @@ package body SAPL.State_Machine is
 
    procedure Update_Cross_Comm is
       Tx_Message : String (1 .. Cross_Comm_Message_Length);
-      Rx_Message : String (1 .. Cross_Comm_Message_Length);
-      C : Character;
+      C          : Character;
+      D          : A0B.Types.SVD.UInt32;
+      Parity     : A0B.Types.SVD.UInt32;
    begin
-      Tx_Message (1) := Start_Header;
-      
-      if SAPL.Processor.Get_Cpu_Id = SAPL.Processor.Cpu_Top then
-         Tx_Message (2) := Character'Val (1);
-      elsif SAPL.Processor.Get_Cpu_Id = SAPL.Processor.Cpu_Bottom then
-         Tx_Message (2) := Character'Val (2);
-      else
-         Tx_Message (2) := Character'Val (0); -- CPU ID
-      end if;
+      --  Byte layout:
+      --  bit 0   : always 1 (sync marker)
+      --  bit 1   : toggle bit (flips each message)
+      --  bits 2-3: CPU ID (01=Top, 10=Bottom)
+      --  bit 4   : input state
+      --  bit 5   : output control
+      --  bit 6   : reserved (0)
+      --  bit 7   : even parity over bits 0-6
+      D :=
+         1
+         or (if Tx_Toggle_Bit
+             then A0B.Types.SVD.UInt32 (2) else A0B.Types.SVD.UInt32 (0))
+         or (if SAPL.Processor.Get_Cpu_Id = SAPL.Processor.Cpu_Top
+             then A0B.Types.SVD.UInt32 (4) else A0B.Types.SVD.UInt32 (8))
+         or (if SAPL.Input.Get_Input_State
+             then A0B.Types.SVD.UInt32 (16) else A0B.Types.SVD.UInt32 (0))
+         or (if Output_Control
+             then A0B.Types.SVD.UInt32 (32) else A0B.Types.SVD.UInt32 (0));
 
-      if SAPL.Input.Get_Input_State then
-         Tx_Message (3) := Character'Val (1);
-      else
-         Tx_Message (3) := Character'Val (0);
-      end if;
+      --  Compute even parity over bits 0-6
+      Parity := (D and 1) xor ((D / 2) and 1) xor ((D / 4) and 1)
+                xor ((D / 8) and 1) xor ((D / 16) and 1)
+                xor ((D / 32) and 1) xor ((D / 64) and 1);
+      D := D or (Parity * 128);
 
-      if Output_Control then
-         Tx_Message (4) := Character'Val (1);
-      else
-         Tx_Message (4) := Character'Val (0);
-      end if;
-
-      Tx_Message (5) := Calculate_Cross_Comm_CRC (Tx_Message (1 .. 4), Character'Val (16#A5#)); -- CRC
+      Tx_Toggle_Bit := not Tx_Toggle_Bit;
+      Tx_Message (1) := Character'Val (D);
 
       COM.Cross.Put_Tx_String (Tx_Message);
       Tx_Message_Count := Tx_Message_Count + 1;
@@ -172,37 +175,19 @@ package body SAPL.State_Machine is
       if Print_Messages then
          COM.Debug.Put_Tx_String ("Last Tx Message: ");
          for I in Tx_Message'Range loop
-            COM.Debug.Put_Tx_String (Integer'Image (Character'Pos (Tx_Message (I))) & " ");
+            COM.Debug.Put_Tx_String
+               (Integer'Image (Character'Pos (Tx_Message (I))) & " ");
          end loop;
-         COM.Debug.Put_Tx_String (Character'Val (13) & Character'Val (10)); -- New line for debugging purposes
+         COM.Debug.Put_Tx_String (Character'Val (13) & Character'Val (10));
       end if;
 
-      COM.Cross.Put_Tx_Character (Character'Val (0)); --  Send a null character to indicate end of message for debugging purposes
-
+      --  Receive: every byte with bit 0 = 1 is a complete message
       while COM.Cross.Is_Rx_Character_Available loop
          C := COM.Cross.Get_Next_Rx_Character;
-         if C = Start_Header then
-            Rx_Count := 1;
+         if (A0B.Types.SVD.UInt32 (Character'Pos (C)) and 1) = 1 then
+            Last_Rx_Message (1) := C;
             Rx_Message_Count := Rx_Message_Count + 1;
-            Last_Rx_Message := Rx_Message; -- Store the last received message for debugging
-         end if;
-
-         if Rx_Count > 0 and then Rx_Count <= Cross_Comm_Message_Length then
-            Rx_Message (Rx_Count) := C;
-            Rx_Count := Rx_Count + 1;
-            if Rx_Count > Cross_Comm_Message_Length then
-               --  Process the received message here
-               if Print_Messages then
-                  COM.Debug.Put_Tx_String ("Last Rx Message: ");
-                  for I in Last_Rx_Message'Range loop
-                     COM.Debug.Put_Tx_String (Integer'Image (Character'Pos (Last_Rx_Message (I))) & " ");
-                  end loop;
-                  COM.Debug.Put_Tx_String (Character'Val (13) & Character'Val (10)); -- New line for debugging purposes
-               end if;
-
-               Process_Rx_Cross_Comm_Message (Rx_Message);
-               Rx_Count := 0;
-            end if;
+            Process_Rx_Cross_Comm_Message (Last_Rx_Message);
          end if;
       end loop;
    end Update_Cross_Comm;
@@ -221,52 +206,40 @@ package body SAPL.State_Machine is
    end Check_Cross_Comm_Timeout;
 
    procedure Process_Rx_Cross_Comm_Message (Message : String) is
+      B      : constant A0B.Types.SVD.UInt32 :=
+         A0B.Types.SVD.UInt32 (Character'Pos (Message (1)));
+      Parity : A0B.Types.SVD.UInt32;
    begin
-      if Message'Length /= Cross_Comm_Message_Length then
-         --  Invalid message length, ignore or handle error
-         raise Constraint_Error with "Received message with invalid length: " &
-            Integer'Image (Message'Length);
+      --  Verify even parity over bits 0-6
+      Parity := (B and 1) xor ((B / 2) and 1) xor ((B / 4) and 1)
+                xor ((B / 8) and 1) xor ((B / 16) and 1)
+                xor ((B / 32) and 1) xor ((B / 64) and 1);
+      if Parity /= ((B / 128) and 1) then
+         return;  --  Parity error: discard message
       end if;
-      if Message'First /= 1 then
-         --  Invalid message format, ignore or handle error
-         raise Constraint_Error with "Received message with invalid format: " &
-            Message;
-      end if;
-      --  Implement message processing logic here
-      if Message (1) = Start_Header then
-         --  Extract CPU ID, input state, and CRC from the message
-         declare
-            Rx_CPU_ID : constant Character := Message (2);
-            Rx_Input_State : constant Character := Message (3);
-            Rx_Output_Control : constant Character := Message (4);
-            Rx_CRC : constant Character := Message (5);
-         begin
-            if Rx_CRC = Calculate_Cross_Comm_CRC (Message (1 .. 4), Character'Val (16#A5#)) then
-               --  Validate CRC and update system state based on rx message
-               if Rx_CPU_ID = Character'Val (1) then
-                  Peer_Cpu_Id := SAPL.Processor.Cpu_Top;
-               elsif Rx_CPU_ID = Character'Val (2) then
-                  Peer_Cpu_Id := SAPL.Processor.Cpu_Bottom;
-               else
-                  Peer_Cpu_Id := SAPL.Processor.Cpu_Unknown;
-               end if;
 
-               if Rx_Input_State = Character'Val (1) then
-                  Peer_Input_State := True;
-               else
-                  Peer_Input_State := False;
-               end if;
+      --  Decode fields
+      declare
+         Rx_Cpu_Bits : constant A0B.Types.SVD.UInt32 := (B / 4) and 3;
+      begin
+         if Rx_Cpu_Bits = 1 then
+            Peer_Cpu_Id := SAPL.Processor.Cpu_Top;
+         elsif Rx_Cpu_Bits = 2 then
+            Peer_Cpu_Id := SAPL.Processor.Cpu_Bottom;
+         else
+            Peer_Cpu_Id := SAPL.Processor.Cpu_Unknown;
+         end if;
 
-               if Rx_Output_Control = Character'Val (1) then
-                  Peer_Output_Control := True;
-               else
-                  Peer_Output_Control := False;
-               end if;
+         Peer_Input_State    := (B and 16) /= 0;
+         Peer_Output_Control := (B and 32) /= 0;
 
-               --  Reset the cross-communication timeout timer
-               Rx_Cross_Comm_Timer := 0;
-            end if;
-         end;
+         Rx_Cross_Comm_Timer := 0;  --  Reset timeout on valid message
+      end;
+
+      if Print_Messages then
+         COM.Debug.Put_Tx_String ("Last Rx Message: ");
+         COM.Debug.Put_Tx_String (Integer'Image (Character'Pos (Message (1))));
+         COM.Debug.Put_Tx_String (Character'Val (13) & Character'Val (10));
       end if;
    end Process_Rx_Cross_Comm_Message;
 
